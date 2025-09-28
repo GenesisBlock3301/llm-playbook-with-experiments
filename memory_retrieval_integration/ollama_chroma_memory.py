@@ -67,4 +67,5 @@ def rag_agent(query):
 
 # ---- Step 4: Test Agent ----
 print(rag_agent("What is RAG?"))
+print("==============")
 print(rag_agent("And how does Ollama fit in?"))
