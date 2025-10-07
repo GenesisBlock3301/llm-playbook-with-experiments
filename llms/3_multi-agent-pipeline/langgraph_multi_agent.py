@@ -6,6 +6,9 @@ from chromadb.utils import embedding_functions
 
 from langgraph.graph import StateGraph, START, END
 from typing import TypedDict
+import diskcache as dc
+
+cache = dc.Cache("./cache_dir")
 
 
 # ---- Ollama wrapper ----
@@ -28,6 +31,10 @@ class ResearchAgent:
     def run(self, query):
         try:
             print("Querying OLLAMA....")
+            if query in cache:
+                print("Using cached query")
+                return cache[query]
+
             results = self.collection.query(
                 query_texts=[query],
                 n_results=5,
@@ -35,9 +42,11 @@ class ResearchAgent:
             )
             docs = results["documents"][0]
             if docs:
-                return " ".join(docs)
+                output = " ".join(docs)
             else:
-                return query_ollama(f"No docs found. Answer this directly: {query}")
+                output = query_ollama(f"No docs found. Answer this directly: {query}")
+            cache[query] = output
+            return output
         except Exception as e:
             return f"[RESEARCH ERROR] {e}"
 
