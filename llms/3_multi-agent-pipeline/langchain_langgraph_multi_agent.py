@@ -26,7 +26,9 @@ docs = [
     "Python is a programming language widely used in AI and web development.",
     "RAG means Retrieval-Augmented Generation which mixes search with LLMs.",
     "Ollama lets you run local LLMs like Llama3 and Mistral.",
-    "LangGraph orchestrates multiple agents in a structured workflow."
+    "LangGraph orchestrates multiple agents in a structured workflow.",
+    "Shoe price is 320tk",
+    "The book price is 100tk"
 ]
 
 for text in docs:
@@ -45,7 +47,7 @@ class ResearchAgent:
             return cache[query]
 
         retriever = self.vs.as_retriever(search_kwargs={"k": 3})
-        results = retriever.get_relevant_documents(query)
+        results = retriever.invoke(query)
 
         if results:
             output = " ".join([doc.page_content for doc in results])
@@ -69,11 +71,11 @@ class SummarizerAgent:
 
 
 class AnswerAgent:
-    def run(self, summary: str):
+    def run(self, summary: str, query: str):
         print("Final answer....")
         if not summary:
             return "No summary available."
-        prompt = f"Generate a clear and complete answer based on this summary:\n{summary}"
+        prompt = f"Based on this summary, answer the question '{query}' directly and concisely:\n{summary}"
         response = llm.invoke([HumanMessage(content=prompt)])
         return response.content
 
@@ -102,7 +104,7 @@ def build_state_graph(
         return state
 
     def answer_node(state: MyState) -> MyState:
-        state['final_answer'] = answer_agent.run(state.get('summary', ''))
+        state['final_answer'] = answer_agent.run(state.get('summary', ''), state['query'])
         return state
 
     graph.add_node('research', research_node)
@@ -130,7 +132,7 @@ if __name__ == "__main__":
     graph = build_state_graph(research_agent, summarizer_agent, answer_agent).compile()
     display(graph)
 
-    init_state = {"query": "What is LangGraph?"}
+    init_state = {"query": "What is the price of book? "}
     final_state = graph.invoke(init_state)
 
     print("\n=== 🧩 FINAL ANSWER ===\n")
